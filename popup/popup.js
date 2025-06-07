@@ -32,9 +32,9 @@ function startTimer(duration, type) {
 function restoreTimer() {
     chrome.storage.local.get("timer", function(result){
         if (result.timer) {
-            const {start, end, type} = result.timer;
+            const {start, duration, type} = result.timer;
             const elapsed = Math.floor(Date.now()-start)/1000;
-            const remaining = end - elapsed;
+            const remaining = duration - elapsed;
             if (remaining > 0) {
                 time = remaining;
                 updateTimerDisplay();
