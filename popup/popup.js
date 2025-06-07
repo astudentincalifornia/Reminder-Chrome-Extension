@@ -6,31 +6,72 @@ function updateTimerDisplay() {
     document.getElementById("timer").textContent = `${minutes}:${seconds}`;
 }
 
-document.getElementById("startWork").addEventListener("click", function() {
-    if (timerInterval) {
-        return;
-    }
-    time = 25 * 60;
+function startTimer(duration, type) {
+    const startTimestamp = Date.now();
+    chrome.storage.local.set({
+        timer: {
+            start: startTimestamp,
+            duration: duration,
+            type: type
+        }
+    });
+    time = duration;
+    updateTimerDisplay();
     timerInterval = setInterval(function() {
         if (time > 0) {
             time--;
             updateTimerDisplay();
+        } else {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            chrome.storage.local.remove("timer");
         }
     }, 1000);
+}
+
+function restoreTimer() {
+    chrome.storage.local.get("timer", function(result){
+        if (result.timer) {
+            const {start, end, type} = result.timer;
+            const elapsed = Math.floor(Date.now()-start)/1000;
+            const remaining = end - elapsed;
+            if (remaining > 0) {
+                time = remaining;
+                updateTimerDisplay();
+                timerInterval = setInterval(function () {
+                    if (time > 0) {
+                        time--;
+                        updateTimerDisplay();
+                    } else{
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        chrome.storage.local.remove("timer");
+                    }
+                }, 1000);
+            } else {
+                time = 0;
+                updateTimerDisplay();
+                chrome.storage.local.remove("timer");
+            } 
+        } else {
+            time = 25 * 60;
+            updateTimerDisplay();
+        }
+    });
+}
+
+document.getElementById("startWork").addEventListener("click", function() {
+    if (timerInterval) {
+        return;
+    }
+    startTimer(25 * 60, "work");
 });
 
 document.getElementById("startBreak").addEventListener("click", function(){
     if (timerInterval) {
         return;
     }
-    time = 5 * 60; 
-    
-    timerInterval = setInterval(function(){
-        if (time > 0) {
-            time--;
-            updateTimerDisplay();
-        }
-    },1000);
+    startTimer(5*60, "break");
 });
 
-updateTimerDisplay(); 
+restoreTimer();

@@ -6,5 +6,12 @@
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": "images/icon.png"
-  }
+  },
+  "permissions":[
+    "storage",
+    "notifications",
+    "tabs",
+    "alarms",
+    "scripting"
+  ]
 }
