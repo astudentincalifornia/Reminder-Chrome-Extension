@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (resetBtn) {
-        stopBtn.addEventListener("click", function(){
+        resetBtn.addEventListener("click", function(){
             console.log("Reset");
             resetTimer();
         })

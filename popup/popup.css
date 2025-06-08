@@ -12,6 +12,7 @@ body {
 h1 {
     margin: 0 0 20px 0;
     font-size: 24px;
+    color: white;
 }
 
 #timer {
@@ -21,7 +22,7 @@ h1 {
     position: relative;
     border: 3px solid #fff;
     border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
     overflow: hidden;
 }
 
@@ -58,8 +59,9 @@ h1 {
     transform: translate(-50%, -50%);
     z-index: 10;
     color: white;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     font-weight: bold;
+    font-size: 18px;
 }
 
 .buttons {
@@ -76,6 +78,7 @@ button{
     cursor: pointer;
     font-weight: bold;
     transition: all 0.3s ease;
+    font-size: 14px;
 }
 
 button:hover{
@@ -85,4 +88,24 @@ button:hover{
 
 button:active{
     transform: translateY(0);
+}
+
+#startWork {
+    background: rgba(76, 175, 80, 0.6);
+    border-color: #4CAF50;
+}
+
+#startBreak {
+    background: rgba(255, 193, 7, 0.6);
+    border-color: #FFC107;
+}
+
+#stop {
+    background: rgba(255, 152, 0, 0.6);
+    border-color: #FF9800;
+}
+
+#reset {
+    background: rgba(244, 67, 54, 0.6);
+    border-color: #F44336;
 }
