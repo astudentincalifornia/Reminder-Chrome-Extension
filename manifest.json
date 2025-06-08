@@ -10,8 +10,9 @@
   "permissions":[
     "storage",
     "notifications",
-    "tabs",
-    "alarms",
-    "scripting"
+    "alarms"
+  ],
+  "host_permissions": [
+    "<all_urls>"
   ]
 }
