@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <link rel="stylesheet" href="popup.css">
+    </head>
     <body>
         <h1>Pomodoro Timer</h1>
-        <div id="timer">25:00</div>
-        <button id="startWork">Start Work</button>
-        <button id="startBreak">Start Break</button>
-        <button id="stop">Stop</button>
+        <div id="timer">
+            <div class="water" id="water"></div>
+            <div class="timer-info" id="timer-info">Ready</div>
+        </div>
+        <div class="buttons">
+            <button id="startWork">Work</button>
+            <button id="startBreak">Break</button>
+            <button id="stop">Stop</button>
+            <button id="reset">Reset</button>
+        </div>
         <script src="popup.js"></script>
         <script src="../scripts/timer.js"></script>
     </body>
