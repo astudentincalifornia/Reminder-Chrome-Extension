@@ -1,10 +1,47 @@
 let time;
 let timerInterval;
 let initialDuration;
+let currentTime = null;
+
+function updateButtons(state) {
+    const startWorkBtn = document.getElementById("startWork");
+    const startBreakBtn = document.getElementById("startBreak");
+    const stopBtn = document.getElementById("stop");
+    const resetBtn = document.getElementById("reset");
+
+    [startWorkBtn, startBreakBtn, stopBtn].forEach(btn => {
+        if (btn) btn.style.display = 'none';
+    });
+
+    switch(state){
+        case 'ready':
+            if (startWorkBtn) startWorkBtn.style.display = 'inline-block';
+            break;
+        case 'working':
+            if (stopBtn) stopBtn.style.display = 'inline-block';
+            break;
+        case 'workDone':
+            if (startBreakBtn) startBreakBtn.style.display = 'inline-block';
+            break;
+        case 'breaking':
+            if (stopBtn) stopBtn.style.display = 'inline-block';
+            break;
+        case 'paused':
+            if (currentType === 'work'){
+                if (startWorkBtn) startWorkBtn.style.display = 'inline-block';
+            } else {
+                if (startBreakBtn) startBreakBtn.style.display = 'inline-block';
+            }
+            break;
+    }
+
+    if (resetBtn) resetBtn.style.display = 'inline-block';
+}
 
 function startTimer(duration, type) {
     console.log('Starting timer with duration:', duration, 'type:', type);
     initialDuration = duration;
+    currentType = type;
     const startTimestamp = Date.now();
     chrome.storage.local.set({
         timer: {
@@ -17,6 +54,9 @@ function startTimer(duration, type) {
     time = duration;
     console.log('Initial time set to:', time);
     window.updateTimerDisplay(time, initialDuration);
+
+    updateButtons(type==='work'?'working' : 'breaking');
+
     timerInterval = setInterval(function() {
         if (time > 0) {
             time--;
@@ -27,6 +67,13 @@ function startTimer(duration, type) {
             clearInterval(timerInterval);
             timerInterval = null;
             chrome.storage.local.remove("timer");
+
+            if (type === 'work'){
+                updateButtons('workDone');
+            } else {
+                updateButtons('breakDone');
+            }
+
         }
     }, 1000);
 }
@@ -38,12 +85,14 @@ function restoreTimer() {
             console.log('Found stored timer:', result.timer);
             const {start, duration, type, initialDuration: storedInitial} = result.timer;
             initialDuration = storedInitial || duration;
+            currentType = type;
             const elapsed = Math.floor((Date.now()-start)/1000);
             const remaining = duration - elapsed;
             console.log('Elapsed:', elapsed, 'Remaining:', remaining);
             if (remaining > 0) {
                 time = remaining;
                 window.updateTimerDisplay(time, initialDuration);
+                updateButtons(type==='work'?'working' : 'breaking')
                 timerInterval = setInterval(function () {
                     if (time > 0) {
                         time--;
@@ -54,18 +103,26 @@ function restoreTimer() {
                         clearInterval(timerInterval);
                         timerInterval = null;
                         chrome.storage.local.remove("timer");
+
+                        if(type === 'work'){
+                            updateButtons('workDone');
+                        } else {
+                            updateButtons('breakDone');
+                        }
                     }
                 }, 1000);
             } else {
                 time = 0;
                 window.updateTimerDisplay(time, initialDuration);
                 chrome.storage.local.remove("timer");
+                updateButtons(type==='work' ? 'workDone' : 'breakDone');
             } 
         } else {
             console.log('No stored timer found, setting default');
             time = 25 * 60;
             initialDuration = 25*60
             window.updateTimerDisplay(time, initialDuration);
+            updateButtons('ready');
         }
     });
 }
@@ -75,6 +132,7 @@ function stopTimer(){
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
+        updateButtons('paused');
     }
 }
 
@@ -86,7 +144,9 @@ function resetTimer() {
     chrome.storage.local.remove("timer");
     time = 25*60;
     initialDuration = 25*60;
+    currentType = null;
     window.updateTimerDisplay(time, initialDuration);
+    updateButtons('ready');
 }
 
 function resumeTimer() {
@@ -97,10 +157,12 @@ function resumeTimer() {
             timer: {
                 start: startTimestamp,
                 duration: initialDuration,
-                type: "work",
+                type: currentType || "work",
                 initialDuration: initialDuration
             }
         });
+
+        updateButtons(currentType === 'work'? 'working': 'breaking')
 
         timerInterval = setInterval(function() {
             if (time>0) {
@@ -112,6 +174,12 @@ function resumeTimer() {
                 clearInterval(timerInterval);
                 timerInterval = null;
                 chrome.storage.local.remove("timer");
+
+                if(currentType === 'work') {
+                    updateButtons('workDone');
+                } else {
+                    updateButtons('breakDone');
+                }
             }
         }, 1000);
     }
@@ -138,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            if(time>0 && time < initialDuration) {
+            if(time>0 && time < initialDuration && currentType === 'work') {
                 resumeTimer();
             } else {
                 startTimer(25 * 60, "work");
@@ -153,7 +221,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Timer already running, ignoring click');
                 return;
             }
-            startTimer(5*60, "break");
+
+            if(time>0 && time<initialDuration && currentTime === 'break'){
+                resumeTimer();
+            } else {
+                startTimer(5*60, "break");
+            }
         });
     }
 
