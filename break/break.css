@@ -157,7 +157,7 @@ button {
         opacity: 0.3;
     }
     100% {
-        trasform: translateY(-500px);
+        transform: translateY(-500px);
         opacity: 0;
     }
 }

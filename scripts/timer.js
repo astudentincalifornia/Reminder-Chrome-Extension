@@ -19,6 +19,7 @@ function updateButtons(state) {
     switch(state){
         case 'ready':
             if (startWorkBtn) startWorkBtn.style.display = 'inline-block';
+            if (skipBtn) skipBtn.style.display = 'none';
             break;
         case 'working':
             if (stopBtn) stopBtn.style.display = 'inline-block';

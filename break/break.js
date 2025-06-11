@@ -2,6 +2,7 @@ let zenCountdownInterval;
 
 function initializeBreakPage() {
     loadSavedLinks();
+    setupEventListeners();
 }
 
 function loadSavedLinks(){
@@ -59,7 +60,26 @@ function enterZenMode(){
             zenOverlay.classList.add('visible');
         }, 10);
 
-        update
+        updateZenTimerDisplay(timeRemaining);
+
+        if(zenCountdownInterval) {
+            clearInterval(zenCountdownInterval);
+        }
+
+        zenCountdownInterval = setInterval(() => {
+            timeRemaining--;
+
+            if(timeRemaining <= 0){
+                clearInterval(zenCountdownInterval);
+                timeRemaining = 0;
+                exitZenMode();
+            }
+
+            updateZenTimerDisplay(timeRemaining);
+        }, 1000);
+
+        window.zenCountdownInterval = zenCountdownInterval;
+
     });
 }
 
@@ -81,7 +101,10 @@ function exitZenMode(){
     }, 500);
 
     if (window.zenCountdownInterval) {
-        clearInterval()
+        clearInterval(window.zenCountdownInterval);
+            window.zenCountdownInterval = null;
     }
 
 }
+
+document.addEventListener('DOMContentLoaded', initializeBreakPage);
