@@ -97,8 +97,16 @@ function startTimer(duration, type) {
             clearInterval(timerInterval);
             timerInterval = null;
             chrome.storage.local.remove("pomodoro_timer");
+            
+            chrome.notifications.create({
+                type: 'basic',
+                iconUrl: '../images/icon.png',
+                title: type === 'work' ? 'Work Session Complete' : 'Break Complete',
+                message: type === 'work' ? 'Time for a break' : 'GET BACK TO WORK'
+            });
 
             if (type === 'work'){
+                openBreakPage();
                 pomodoroCount++;
                 updateButtons('workDone');
             } else if (type === 'break'){
@@ -266,6 +274,13 @@ function skipTimer (){
     time = 0;
     window.updateTimerDisplay(time, initialDuration);
 }
+
+function openBreakPage() {
+    chrome.tabs.create({
+        url: chrome.runtime.getURL('break/break.html')
+    })
+}
+
 
 
 document.addEventListener('DOMContentLoaded', function() {
