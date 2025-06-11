@@ -15,6 +15,14 @@ h1 {
     color: white;
 }
 
+#pomodoro-count {
+    color: #ffeb3b;
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+
 #timer {
     width: 200px;
     height: 250px;
@@ -91,21 +99,61 @@ button:active{
 }
 
 #startWork {
-    background: rgba(76, 175, 80, 0.6);
+    background: linear-gradient(135deg, #4CAF50, #45a049);
     border-color: #4CAF50;
+    color: white;
+}
+
+#startWork:hover {
+    background: linear-gradient(135 deg, #45a049, #3d8b3d);
 }
 
 #startBreak {
-    background: rgba(255, 193, 7, 0.6);
-    border-color: #FFC107;
+    background: linear-gradient(135 deg, #FF9800, #f57c00);
+    border-color: #FF9800;
+    color: white;
+}
+
+#startLongBreak {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    border-color: #9C27B0;
+    color: white;
+}
+
+#startLongBreak:hover {
+    background: linear-gradient(135deg, #7B1FA2, #6A1B9A);
+}
+
+#startBreak:hover {
+    background: linear-gradient(135deg, #f57c00, #e65100);
 }
 
 #stop {
-    background: rgba(255, 152, 0, 0.6);
-    border-color: #FF9800;
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    border-color: #f44336;
+    color: white;
+}
+
+#stop:hover {
+    background: linear-gradient(135deg, #d32f2f, #c62828);
 }
 
 #reset {
-    background: rgba(244, 67, 54, 0.6);
-    border-color: #F44336;
+    background: linear-gradient(135deg, #607D8B, #455A64);
+    border-color: #607D8B;
+    color: white;
+}
+
+#reset:hover {
+    background: linear-gradient(135deg, #455A64, #37474F);
+}
+
+#skip {
+    background: linear-gradient(135deg, #795548, #5D4037);
+    border-color: #795548;
+    color: white;
+}
+
+#skip:hover {
+    background: linear-gradient(135deg, #5D4037, #4E342E);
 }

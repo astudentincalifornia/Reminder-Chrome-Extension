@@ -59,7 +59,7 @@ function updatePomodoroDisplay(){
     if (pomodoroDisplay) {
         const cyclePosition = pomodoroCount % 4;
         const completedCycles = Math.floor(pomodoroCount / 4);
-        pomodoroDisplay.textContent = `🍅 ${cyclePosition}/4 (Cycles: ${completedCycles})`;
+        pomodoroDisplay.textContent = `${cyclePosition}/4 (Cycles: ${completedCycles})`;
     }
 }
 
