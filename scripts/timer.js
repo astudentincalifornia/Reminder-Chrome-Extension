@@ -22,6 +22,7 @@ function updateButtons(state) {
             break;
         case 'working':
             if (stopBtn) stopBtn.style.display = 'inline-block';
+            if (skipBtn) skipBtn.style.display = 'inline-block';
             break;
         case 'workDone':
             if (pomodoroCount % 4 === 0 && pomodoroCount > 0){
@@ -33,10 +34,7 @@ function updateButtons(state) {
         case 'breaking':
         case 'longBreaking':
             if (stopBtn) stopBtn.style.display = 'inline-block';
-            break;
-        case 'breaking':
-        case 'longBreaking':
-            if (startWorkBtn) startWorkBtn.style.display = 'inline-block';
+            if (skipBtn) skipBtn.style.display = 'inline-block';
             break;
         case 'paused':
             if (currentType === 'work'){
@@ -104,9 +102,9 @@ function startTimer(duration, type) {
                 pomodoroCount++;
                 updateButtons('workDone');
             } else if (type === 'break'){
-                updateButtons('breakDone');
+                updateButtons('ready');
             } else if (type === 'longBreak') {
-                updateButtons('longBreakDone');
+                updateButtons('ready');
             }
 
         }
@@ -116,9 +114,9 @@ function startTimer(duration, type) {
 function restoreTimer() {
     console.log('Restoring timer...');
     chrome.storage.local.get("pomodoro_timer", function(result){
-        if (result.timer) {
-            console.log('Found stored timer:', result.timer);
-            const {start, duration, type, initialDuration: storedInitial, pomodoroCount: storedCount} = result.timer;
+        if (result.pomodoro_timer) {
+            console.log('Found stored timer:', result.pomodoro_timer);
+            const {start, duration, type, initialDuration: storedInitial, pomodoroCount: storedCount} = result.pomodoro_timer;
             initialDuration = storedInitial || duration;
             currentType = type;
             pomodoroCount =  storedCount; 
@@ -147,11 +145,12 @@ function restoreTimer() {
                         chrome.storage.local.remove("pomodoro_timer");
 
                         if(type === 'work'){
+                            pomodoroCount++;
                             updateButtons('workDone');
                         } else if (type === 'break'){
-                            updateButtons('breakDone');
+                            updateButtons('ready');
                         } else if (type === 'longBreak'){
-                            updateButtons('longBreakDone');
+                            updateButtons('ready');
                         }
                     }
                 }, 1000);
@@ -163,9 +162,9 @@ function restoreTimer() {
                     pomodoroCount++;
                     updateButtons('workDone');
                 } else if (type === 'break') {
-                    updateButtons('breakDone');
+                    updateButtons('ready');
                 } else if (type === 'longBreak'){
-                    updateButtons('longBreak');
+                    updateButtons('ready');
                 }
             } 
         } else {
@@ -253,15 +252,15 @@ function skipTimer (){
         clearInterval(timerInterval);
         timerInterval=null;
     }
-    chrome.storage.local.remove('timer');
+    chrome.storage.local.remove('pomodoro_timer');
 
     if (currentType === 'work'){
         pomodoroCount++;
         updateButtons('workDone');
     } else if (currentType === 'break'){
-        updateButtons('breakDone');
+        updateButtons('ready');
     } else if (currentType === 'longBreak'){
-        updateButtons('longBreakDone');
+        updateButtons('ready');
     }
 
     time = 0;
@@ -335,6 +334,16 @@ document.addEventListener('DOMContentLoaded', function() {
             skipTimer();
         })
     }
+
+    if(startLongBreakBtn){
+        startLongBreakBtn.addEventListener("click", function(){
+            if (timerInterval) {
+                return;
+            }
+            startTimer(25*60, "longBreak");
+        });
+    }
+
 
     restoreTimer();
 });

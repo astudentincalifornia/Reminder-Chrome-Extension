@@ -12,7 +12,8 @@ body {
 h1 {
     margin: 0 0 20px 0;
     font-size: 24px;
-    color: white;
+    font-family: sans-serif;
+    color: black;
 }
 
 #pomodoro-count {
@@ -105,11 +106,11 @@ button:active{
 }
 
 #startWork:hover {
-    background: linear-gradient(135 deg, #45a049, #3d8b3d);
+    background: linear-gradient(135deg, #45a049, #3d8b3d);
 }
 
 #startBreak {
-    background: linear-gradient(135 deg, #FF9800, #f57c00);
+    background: linear-gradient(135deg, #FF9800, #f57c00);
     border-color: #FF9800;
     color: white;
 }
