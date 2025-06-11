@@ -5,6 +5,7 @@
     </head>
     <body>
         <h1>Pomodoro Timer</h1>
+        <div id = "pomodoro-count">🍅 0/4 (Cycles: 0)</div>
         <div id="timer">
             <div class="water" id="water"></div>
             <div class="timer-info" id="timer-info">Ready</div>
@@ -12,8 +13,10 @@
         <div class="buttons">
             <button id="startWork">Work</button>
             <button id="startBreak" style="display: none;">Break</button>
+            <button id="startLongBreak" style="display: none;">Long Break</button>
             <button id="stop" style="display: none;">Stop</button>
             <button id="reset">Reset</button>
+            <button id="skip">Skip</button>
         </div>
         <script src="popup.js"></script>
         <script src="../scripts/timer.js"></script>

@@ -2,12 +2,15 @@ let time;
 let timerInterval;
 let initialDuration;
 let currentTime = null;
+let pomodoroCount = 0;
 
 function updateButtons(state) {
     const startWorkBtn = document.getElementById("startWork");
     const startBreakBtn = document.getElementById("startBreak");
+    const startLongBreakBtn = document.getElementById("startLongBreak");
     const stopBtn = document.getElementById("stop");
     const resetBtn = document.getElementById("reset");
+    const skipBtn = document.getElementById("skip");
 
     [startWorkBtn, startBreakBtn, stopBtn].forEach(btn => {
         if (btn) btn.style.display = 'none';
@@ -21,21 +24,43 @@ function updateButtons(state) {
             if (stopBtn) stopBtn.style.display = 'inline-block';
             break;
         case 'workDone':
-            if (startBreakBtn) startBreakBtn.style.display = 'inline-block';
-            break;
-        case 'breaking':
-            if (stopBtn) stopBtn.style.display = 'inline-block';
-            break;
-        case 'paused':
-            if (currentType === 'work'){
-                if (startWorkBtn) startWorkBtn.style.display = 'inline-block';
+            if (pomodoroCount % 4 === 0 && pomodoroCount > 0){
+                if (startLongBreakBtn) startLongBreakBtn.style.display = 'inline-block';
             } else {
                 if (startBreakBtn) startBreakBtn.style.display = 'inline-block';
             }
             break;
+        case 'breaking':
+        case 'longBreaking':
+            if (stopBtn) stopBtn.style.display = 'inline-block';
+            break;
+        case 'breaking':
+        case 'longBreaking':
+            if (startWorkBtn) startWorkBtn.style.display = 'inline-block';
+            break;
+        case 'paused':
+            if (currentType === 'work'){
+                if (startWorkBtn) startWorkBtn.style.display = 'inline-block';
+            } else if (currentType === 'break'){
+                if (startBreakBtn) startBreakBtn.style.display = 'inline-block';
+            } else if (currentType === 'longBreak') {
+                if (startLongBreakBtn) startLongBreakBtn.style.display = 'inline-block';
+            }
+            if (skipBtn) skipBtn.style.display = 'inline-block';
+            break;
     }
 
     if (resetBtn) resetBtn.style.display = 'inline-block';
+    updatePomodoroDisplay();
+}
+
+function updatePomodoroDisplay(){
+    const pomodoroDisplay = document.getElementById('pomodoro-count');
+    if (pomodoroDisplay) {
+        const cyclePosition = pomodoroCount % 4;
+        const completedCycles = Math.floor(pomodoroCount / 4);
+        pomodoroDisplay.textContent = `🍅 ${cyclePosition}/4 (Cycles: ${completedCycles})`;
+    }
 }
 
 function startTimer(duration, type) {
@@ -44,18 +69,25 @@ function startTimer(duration, type) {
     currentType = type;
     const startTimestamp = Date.now();
     chrome.storage.local.set({
-        timer: {
+        pomodoro_timer: {
             start: startTimestamp,
             duration: duration,
             type: type,
-            initialDuration: duration
+            initialDuration: duration,
+            pomodoroCount: pomodoroCount
         }
     });
     time = duration;
     console.log('Initial time set to:', time);
     window.updateTimerDisplay(time, initialDuration);
-
-    updateButtons(type==='work'?'working' : 'breaking');
+    
+    if (type === 'work') {
+        updateButtons('working');
+    } else if (type === 'break') {
+        updateButtons('breaking');
+    } else if (type === 'longBreak') {
+        updateButtons('longBreaking');
+    }
 
     timerInterval = setInterval(function() {
         if (time > 0) {
@@ -66,12 +98,15 @@ function startTimer(duration, type) {
             console.log('Timer finished');
             clearInterval(timerInterval);
             timerInterval = null;
-            chrome.storage.local.remove("timer");
+            chrome.storage.local.remove("pomodoro_timer");
 
-            if (type === 'work'){
+            if (type === 'workDone'){
+                pomodoroCount++;
                 updateButtons('workDone');
-            } else {
+            } else if (type === 'break'){
                 updateButtons('breakDone');
+            } else if (type === 'longBreak') {
+                updateButtons('longBreakDone');
             }
 
         }
@@ -80,19 +115,26 @@ function startTimer(duration, type) {
 
 function restoreTimer() {
     console.log('Restoring timer...');
-    chrome.storage.local.get("timer", function(result){
+    chrome.storage.local.get("pomodoro_timer", function(result){
         if (result.timer) {
             console.log('Found stored timer:', result.timer);
-            const {start, duration, type, initialDuration: storedInitial} = result.timer;
+            const {start, duration, type, initialDuration: storedInitial, pomodoroCount: storedCount} = result.timer;
             initialDuration = storedInitial || duration;
             currentType = type;
+            pomodoroCount =  storedCount; 
             const elapsed = Math.floor((Date.now()-start)/1000);
             const remaining = duration - elapsed;
             console.log('Elapsed:', elapsed, 'Remaining:', remaining);
             if (remaining > 0) {
                 time = remaining;
                 window.updateTimerDisplay(time, initialDuration);
-                updateButtons(type==='work'?'working' : 'breaking')
+                if (type === 'work') {
+                    updateButtons('working');
+                } else if (type === 'break') {
+                    updateButtons('breaking');
+                } else if (type === 'longBreak'){
+                    updateButtons('longBreaking');
+                }
                 timerInterval = setInterval(function () {
                     if (time > 0) {
                         time--;
@@ -102,25 +144,35 @@ function restoreTimer() {
                         console.log('Restored timer finished');
                         clearInterval(timerInterval);
                         timerInterval = null;
-                        chrome.storage.local.remove("timer");
+                        chrome.storage.local.remove("pomodoro_timer");
 
                         if(type === 'work'){
                             updateButtons('workDone');
-                        } else {
+                        } else if (type === 'break'){
                             updateButtons('breakDone');
+                        } else if (type === 'longBreak'){
+                            updateButtons('longBreakDone');
                         }
                     }
                 }, 1000);
             } else {
                 time = 0;
                 window.updateTimerDisplay(time, initialDuration);
-                chrome.storage.local.remove("timer");
-                updateButtons(type==='work' ? 'workDone' : 'breakDone');
+                chrome.storage.local.remove("pomodoro_timer");
+                if (type === 'work'){
+                    pomodoroCount++;
+                    updateButtons('workDone');
+                } else if (type === 'break') {
+                    updateButtons('breakDone');
+                } else if (type === 'longBreak'){
+                    updateButtons('longBreak');
+                }
             } 
         } else {
             console.log('No stored timer found, setting default');
             time = 25 * 60;
             initialDuration = 25*60
+            pomodoroCount = 0;
             window.updateTimerDisplay(time, initialDuration);
             updateButtons('ready');
         }
@@ -141,10 +193,11 @@ function resetTimer() {
         clearInterval(timerInterval);
         timerInterval = null;
     }
-    chrome.storage.local.remove("timer");
+    chrome.storage.local.remove("pomodoro_timer");
     time = 25*60;
     initialDuration = 25*60;
     currentType = null;
+    pomodoroCount = 0;
     window.updateTimerDisplay(time, initialDuration);
     updateButtons('ready');
 }
@@ -154,15 +207,22 @@ function resumeTimer() {
     if (!timerInterval && time > 0){
         const startTimestamp = Date.now() - ((initialDuration - time) * 1000);
         chrome.storage.local.set({
-            timer: {
+            pomodoro_timer: {
                 start: startTimestamp,
                 duration: initialDuration,
                 type: currentType || "work",
-                initialDuration: initialDuration
+                initialDuration: initialDuration,
+                pomodoroCount: pomodoroCount
             }
         });
 
-        updateButtons(currentType === 'work'? 'working': 'breaking')
+        if (currentType === 'work') {
+            updateButtons('working');
+        } else if (currentType === 'break') {
+            updateButtons('breaking');
+        } else if (currentType === 'longBreak'){
+            updateButtons('longBreaking');
+        }
 
         timerInterval = setInterval(function() {
             if (time>0) {
@@ -173,25 +233,51 @@ function resumeTimer() {
                 console.log("resumed timer finished");
                 clearInterval(timerInterval);
                 timerInterval = null;
-                chrome.storage.local.remove("timer");
+                chrome.storage.local.remove("pomodoro_timer");
 
                 if(currentType === 'work') {
+                    pomodoroCount++;
                     updateButtons('workDone');
-                } else {
+                } else if (currentType === 'break'){
                     updateButtons('breakDone');
+                } else if (currentType === 'longBreak'){
+                    updateButtons('longBreakDone');
                 }
             }
         }, 1000);
     }
 }
 
+function skipTimer (){
+    if(timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval=null;
+    }
+    chrome.storage.local.remove('timer');
+
+    if (currentType === 'work'){
+        pomodoroCount++;
+        updateButtons('workDone');
+    } else if (currentType === 'break'){
+        updateButtons('breakDone');
+    } else if (currentType === 'longBreak'){
+        updateButtons('longBreakDone');
+    }
+
+    time = 0;
+    window.updateTimerDisplay(time, initialDuration);
+}
+
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, setting up event listeners');
     
     const startWorkBtn = document.getElementById("startWork");
     const startBreakBtn = document.getElementById("startBreak");
+    const startLongBreak = document.getElementById('startLon')
     const stopBtn = document.getElementById("stop");
     const resetBtn = document.getElementById("reset");
+    const skipBtn = document.getElementById('skip');
     
     console.log('Start work button:', startWorkBtn);
     console.log('Start break button:', startBreakBtn);
@@ -241,6 +327,12 @@ document.addEventListener('DOMContentLoaded', function() {
         resetBtn.addEventListener("click", function(){
             console.log("Reset");
             resetTimer();
+        })
+    }
+
+    if(skipBtn) {
+        skipBtn.addEventListener("click", function () {
+            skipTimer();
         })
     }
 

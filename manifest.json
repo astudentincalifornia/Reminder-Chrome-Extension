@@ -10,9 +10,14 @@
   "permissions":[
     "storage",
     "notifications",
-    "alarms"
+    "alarms",
+    "contextMenus",
+    "activeTab"
   ],
   "host_permissions": [
     "<all_urls>"
-  ]
+  ],
+  "background": {
+    "service_worker": "scripts/contextMenu.js"
+  }
 }
