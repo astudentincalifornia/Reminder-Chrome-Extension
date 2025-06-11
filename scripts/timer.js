@@ -1,7 +1,7 @@
 let time;
 let timerInterval;
 let initialDuration;
-let currentTime = null;
+let currentType = null;
 let pomodoroCount = 0;
 
 function updateButtons(state) {
@@ -12,7 +12,7 @@ function updateButtons(state) {
     const resetBtn = document.getElementById("reset");
     const skipBtn = document.getElementById("skip");
 
-    [startWorkBtn, startBreakBtn, stopBtn].forEach(btn => {
+    [startWorkBtn, startBreakBtn, startLongBreakBtn, stopBtn, skipBtn].forEach(btn => {
         if (btn) btn.style.display = 'none';
     });
 
@@ -98,7 +98,7 @@ function startTimer(duration, type) {
             timerInterval = null;
             chrome.storage.local.remove("pomodoro_timer");
 
-            if (type === 'workDone'){
+            if (type === 'work'){
                 pomodoroCount++;
                 updateButtons('workDone');
             } else if (type === 'break'){
@@ -119,7 +119,7 @@ function restoreTimer() {
             const {start, duration, type, initialDuration: storedInitial, pomodoroCount: storedCount} = result.pomodoro_timer;
             initialDuration = storedInitial || duration;
             currentType = type;
-            pomodoroCount =  storedCount; 
+            pomodoroCount =  storedCount || 0; 
             const elapsed = Math.floor((Date.now()-start)/1000);
             const remaining = duration - elapsed;
             console.log('Elapsed:', elapsed, 'Remaining:', remaining);
@@ -170,7 +170,7 @@ function restoreTimer() {
         } else {
             console.log('No stored timer found, setting default');
             time = 25 * 60;
-            initialDuration = 25*60
+            initialDuration = 25*60;
             pomodoroCount = 0;
             window.updateTimerDisplay(time, initialDuration);
             updateButtons('ready');
@@ -238,9 +238,9 @@ function resumeTimer() {
                     pomodoroCount++;
                     updateButtons('workDone');
                 } else if (currentType === 'break'){
-                    updateButtons('breakDone');
+                    updateButtons('ready');
                 } else if (currentType === 'longBreak'){
-                    updateButtons('longBreakDone');
+                    updateButtons('ready');
                 }
             }
         }, 1000);
@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const startWorkBtn = document.getElementById("startWork");
     const startBreakBtn = document.getElementById("startBreak");
-    const startLongBreak = document.getElementById('startLon')
+    const startLongBreakBtn = document.getElementById('startLongBreak');
     const stopBtn = document.getElementById("stop");
     const resetBtn = document.getElementById("reset");
     const skipBtn = document.getElementById('skip');
@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            if(time>0 && time<initialDuration && currentTime === 'break'){
+            if(time>0 && time<initialDuration && currentType === 'break'){
                 resumeTimer();
             } else {
                 startTimer(5*60, "break");
@@ -340,7 +340,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (timerInterval) {
                 return;
             }
-            startTimer(25*60, "longBreak");
+
+            if (time>0 && time < initialDuration && currentType === 'longBreak'){
+                resumeTimer();
+            } else {
+                startTimer(25*60, 'longBreak');
+            }
         });
     }
 
