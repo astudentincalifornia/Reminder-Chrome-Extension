@@ -264,6 +264,7 @@ function skipTimer (){
     chrome.storage.local.remove('pomodoro_timer');
 
     if (currentType === 'work'){
+        openBreakPage();
         pomodoroCount++;
         updateButtons('workDone');
     } else if (currentType === 'break'){
@@ -279,7 +280,19 @@ function skipTimer (){
 function openBreakPage() {
     chrome.tabs.create({
         url: chrome.runtime.getURL('break/break.html')
-    })
+    }, function(tab) {
+        if (chrome.runtime.lastError) {
+            console.error("Error opening break page:", chrome.runtime.lastError);
+            chrome.notifications.create({
+                type: 'basic',
+                iconUrl: '../images/icon.png',
+                title: 'Error Opening Break Page',
+                message: 'Please open the break page manually from the extension popup.'
+            });
+        } else {
+            console.log("Break page opened successfully:", tab);
+        }
+    });
 }
 
 
