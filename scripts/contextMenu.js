@@ -31,7 +31,7 @@ function saveLinkToMemory(info, tab){
         id: Date.now().toString(),
         type: 'link',
         url: info.linkUrl,
-        title: info.linkText || 'Untitled Link',
+        title: info.linkText && info.linkText.trim() ? info.linkText : tab.title || 'Untitled Link',
         sourceUrl: tab.url,
         sourceTitle: tab.title,
         timestamp: new Date().toISOString(),
