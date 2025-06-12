@@ -37,6 +37,14 @@ function setupEventListeners() {
         zenModeButton.addEventListener('click', enterZenMode);
     }
 
+    if (zenOverlay) {
+        zenOverlay.addEventListener('click', (event) => {
+            if (event.target === zenOverlay) {
+                exitZenMode();
+            }
+        });
+    }
+
     // if (zenOverlay && !document.getElementById('exit-zen')) {
         // const 
     // }
@@ -102,9 +110,15 @@ function exitZenMode(){
 
     if (window.zenCountdownInterval) {
         clearInterval(window.zenCountdownInterval);
-            window.zenCountdownInterval = null;
+        window.zenCountdownInterval = null;
     }
-
+    chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'images/icon.png', // Add this line
+        title: 'Break ended',
+        message: 'get back to work'
+    });
 }
+
 
 document.addEventListener('DOMContentLoaded', initializeBreakPage);

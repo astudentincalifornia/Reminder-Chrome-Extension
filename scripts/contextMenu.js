@@ -59,6 +59,7 @@ function showNotification(message, type = 'info') {
 
     chrome.notifications.create({
         type: 'basic',
+        iconUrl: 'images/icon.png', // Add this line
         title: title,
         message: message
     });

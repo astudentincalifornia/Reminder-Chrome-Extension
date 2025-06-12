@@ -6,7 +6,10 @@ function updateTimerDisplay(currentTime, initialDuration = 25*60) {
         console.log('Timer elements not found');
         return;
     }
-
+    if (typeof currentTime !== 'number' || isNaN(currentTime)) {
+        console.log('Invalid currentTime:', currentTime);
+        currentTime = 0;
+    }
     const percentage = (currentTime/initialDuration)*100;
 
     waterElement.style.height = `${Math.max(0, percentage)}%`;

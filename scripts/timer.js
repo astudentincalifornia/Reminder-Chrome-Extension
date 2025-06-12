@@ -84,8 +84,10 @@ function startTimer(duration, type) {
         updateButtons('working');
     } else if (type === 'break') {
         updateButtons('breaking');
+        openBreakPage();
     } else if (type === 'longBreak') {
         updateButtons('longBreaking');
+        openBreakPage();
     }
 
     timerInterval = setInterval(function() {
@@ -101,14 +103,14 @@ function startTimer(duration, type) {
             
             chrome.notifications.create({
                 type: 'basic',
-                iconUrl: '../images/icon.png',
+                iconUrl: 'images/icon.png',
                 title: type === 'work' ? 'Work Session Complete' : 'Break Complete',
                 message: type === 'work' ? 'Time for a break' : 'GET BACK TO WORK'
             });
 
             if (type === 'work'){
-                openBreakPage();
                 pomodoroCount++;
+                chrome.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
                 updateButtons('workDone');
             } else if (type === 'break'){
                 updateButtons('ready');
@@ -122,7 +124,7 @@ function startTimer(duration, type) {
 
 function restoreTimer() {
     console.log('Restoring timer...');
-    chrome.storage.local.get("pomodoro_timer", function(result){
+    chrome.storage.local.get(["pomodoro_timer", "pomodoro_count"], function(result){
         if (result.pomodoro_timer) {
             console.log('Found stored timer:', result.pomodoro_timer);
             const {start, duration, type, initialDuration: storedInitial, pomodoroCount: storedCount} = result.pomodoro_timer;
@@ -155,6 +157,7 @@ function restoreTimer() {
 
                         if(type === 'work'){
                             pomodoroCount++;
+                            chrome.storage.local.set({pomodoro_count: pomodoroCount});
                             updateButtons('workDone');
                         } else if (type === 'break'){
                             updateButtons('ready');
@@ -169,6 +172,7 @@ function restoreTimer() {
                 chrome.storage.local.remove("pomodoro_timer");
                 if (type === 'work'){
                     pomodoroCount++;
+                    chrome.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
                     updateButtons('workDone');
                 } else if (type === 'break') {
                     updateButtons('ready');
@@ -178,9 +182,9 @@ function restoreTimer() {
             } 
         } else {
             console.log('No stored timer found, setting default');
+            pomodoroCount = result.pomodoro_count || 0;
             time = 25 * 60;
             initialDuration = 25*60;
-            pomodoroCount = 0;
             window.updateTimerDisplay(time, initialDuration);
             updateButtons('ready');
         }
@@ -202,6 +206,7 @@ function resetTimer() {
         timerInterval = null;
     }
     chrome.storage.local.remove("pomodoro_timer");
+    chrome.storage.local.remove("pomodoro_count");
     time = 25*60;
     initialDuration = 25*60;
     currentType = null;
@@ -245,6 +250,7 @@ function resumeTimer() {
 
                 if(currentType === 'work') {
                     pomodoroCount++;
+                    chrome.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
                     updateButtons('workDone');
                 } else if (currentType === 'break'){
                     updateButtons('ready');
@@ -264,8 +270,8 @@ function skipTimer (){
     chrome.storage.local.remove('pomodoro_timer');
 
     if (currentType === 'work'){
-        openBreakPage();
         pomodoroCount++;
+        chrome.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
         updateButtons('workDone');
     } else if (currentType === 'break'){
         updateButtons('ready');
@@ -285,7 +291,7 @@ function openBreakPage() {
             console.error("Error opening break page:", chrome.runtime.lastError);
             chrome.notifications.create({
                 type: 'basic',
-                iconUrl: '../images/icon.png',
+                iconUrl: 'images/icon.png',
                 title: 'Error Opening Break Page',
                 message: 'Please open the break page manually from the extension popup.'
             });
