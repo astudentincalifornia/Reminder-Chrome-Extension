@@ -1,31 +1,29 @@
 {
   "name": "Reminder",
-  "description": "Reminds you before you close your browser",
+  "description": "Reminds you before you close firefox",
   "version": "1.0",
-  "manifest_version": 3,
-  "action": {
+  "manifest_version": 2,
+  "browser_action": {
     "default_popup": "popup/popup.html",
     "default_icon": "images/icon.png"
   },
-  "permissions":[
+  "permissions": [
     "storage",
     "notifications",
     "alarms",
     "contextMenus",
     "activeTab",
     "tabs",
-    "scripting"
-  ],
-  "host_permissions": [
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "scripts/contextMenu.js"
+    "scripts": ["scripts/browser-polyfill.js", "scripts/contextMenu.js"],
+    "persistent": false
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["scripts/browser-polyfill.js", "scripts/content.js"]
+      "js": ["scripts/content.js"]
     }
   ],
   "browser_specific_settings": {
@@ -34,10 +32,5 @@
       "strict_min_version": "109.0"
     }
   },
-  "web_accessible_resources": [
-    {
-      "resources": ["break/break.html"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  "web_accessible_resources": ["break/break.html"]
 }

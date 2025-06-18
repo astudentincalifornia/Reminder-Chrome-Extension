@@ -32,8 +32,9 @@ The **Reminder Chrome Extension** is a productivity tool designed to help users 
 
 ## Socials
 Feel free to connect with me on social media:
-- **GitHub**: [A sTUDENT iN cALIFORNIA](https://github.com/astudentincalifornia)
-
+- **GitHub**: [Your GitHub Profile](https://github.com/yourusername)
+- **Twitter**: [Your Twitter Profile](https://twitter.com/yourusername)
+- **LinkedIn**: [Your LinkedIn Profile](https://linkedin.com/in/yourusername)
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

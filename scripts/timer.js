@@ -1,3 +1,6 @@
+const isFirefox = window.isFirefox || typeof browser !== 'undefined';
+const api = window.api || (isFirefox ? browser : chrome);
+
 let time;
 let timerInterval;
 let initialDuration;
@@ -67,7 +70,7 @@ function startTimer(duration, type) {
     initialDuration = duration;
     currentType = type;
     const startTimestamp = Date.now();
-    chrome.storage.local.set({
+    api.storage.local.set({
         pomodoro_timer: {
             start: startTimestamp,
             duration: duration,
@@ -99,9 +102,9 @@ function startTimer(duration, type) {
             console.log('Timer finished');
             clearInterval(timerInterval);
             timerInterval = null;
-            chrome.storage.local.remove("pomodoro_timer");
+            api.storage.local.remove("pomodoro_timer");
             
-            chrome.notifications.create({
+            api.notifications.create({
                 type: 'basic',
                 iconUrl: 'images/icon.png',
                 title: type === 'work' ? 'Work Session Complete' : 'Break Complete',
@@ -110,7 +113,7 @@ function startTimer(duration, type) {
 
             if (type === 'work'){
                 pomodoroCount++;
-                chrome.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
+                api.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
                 updateButtons('workDone');
             } else if (type === 'break'){
                 updateButtons('ready');
@@ -122,73 +125,85 @@ function startTimer(duration, type) {
     }, 1000);
 }
 
+function processTimerRestore(result) {
+    if (result.pomodoro_timer) {
+        console.log('Found stored timer:', result.pomodoro_timer);
+        const {start, duration, type, initialDuration: storedInitial, pomodoroCount: storedCount} = result.pomodoro_timer;
+        initialDuration = storedInitial || duration;
+        currentType = type;
+        pomodoroCount =  storedCount || 0; 
+        const elapsed = Math.floor((Date.now()-start)/1000);
+        const remaining = duration - elapsed;
+        console.log('Elapsed:', elapsed, 'Remaining:', remaining);
+        if (remaining > 0) {
+            time = remaining;
+            window.updateTimerDisplay(time, initialDuration);
+            if (type === 'work') {
+                updateButtons('working');
+            } else if (type === 'break') {
+                updateButtons('breaking');
+            } else if (type === 'longBreak'){
+                updateButtons('longBreaking');
+            }
+            timerInterval = setInterval(function () {
+                if (time > 0) {
+                    time--;
+                    console.log('Restored timer tick, time now:', time);
+                    window.updateTimerDisplay(time, initialDuration);
+                } else{
+                    console.log('Restored timer finished');
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    api.storage.local.remove("pomodoro_timer");
+
+                    if(type === 'work'){
+                        pomodoroCount++;
+                        api.storage.local.set({pomodoro_count: pomodoroCount});
+                        updateButtons('workDone');
+                    } else if (type === 'break'){
+                        updateButtons('ready');
+                    } else if (type === 'longBreak'){
+                        updateButtons('ready');
+                    }
+                }
+            }, 1000);
+        } else {
+            time = 0;
+            window.updateTimerDisplay(time, initialDuration);
+            api.storage.local.remove("pomodoro_timer");
+            if (type === 'work'){
+                pomodoroCount++;
+                api.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
+                updateButtons('workDone');
+            } else if (type === 'break') {
+                updateButtons('ready');
+            } else if (type === 'longBreak'){
+                updateButtons('ready');
+            }
+        } 
+    } else {
+        console.log('No stored timer found, setting default');
+        pomodoroCount = result.pomodoro_count || 0;
+        time = 25 * 60;
+        initialDuration = 25*60;
+        window.updateTimerDisplay(time, initialDuration);
+        updateButtons('ready');
+    }
+}
+
+
 function restoreTimer() {
     console.log('Restoring timer...');
-    chrome.storage.local.get(["pomodoro_timer", "pomodoro_count"], function(result){
-        if (result.pomodoro_timer) {
-            console.log('Found stored timer:', result.pomodoro_timer);
-            const {start, duration, type, initialDuration: storedInitial, pomodoroCount: storedCount} = result.pomodoro_timer;
-            initialDuration = storedInitial || duration;
-            currentType = type;
-            pomodoroCount =  storedCount || 0; 
-            const elapsed = Math.floor((Date.now()-start)/1000);
-            const remaining = duration - elapsed;
-            console.log('Elapsed:', elapsed, 'Remaining:', remaining);
-            if (remaining > 0) {
-                time = remaining;
-                window.updateTimerDisplay(time, initialDuration);
-                if (type === 'work') {
-                    updateButtons('working');
-                } else if (type === 'break') {
-                    updateButtons('breaking');
-                } else if (type === 'longBreak'){
-                    updateButtons('longBreaking');
-                }
-                timerInterval = setInterval(function () {
-                    if (time > 0) {
-                        time--;
-                        console.log('Restored timer tick, time now:', time);
-                        window.updateTimerDisplay(time, initialDuration);
-                    } else{
-                        console.log('Restored timer finished');
-                        clearInterval(timerInterval);
-                        timerInterval = null;
-                        chrome.storage.local.remove("pomodoro_timer");
-
-                        if(type === 'work'){
-                            pomodoroCount++;
-                            chrome.storage.local.set({pomodoro_count: pomodoroCount});
-                            updateButtons('workDone');
-                        } else if (type === 'break'){
-                            updateButtons('ready');
-                        } else if (type === 'longBreak'){
-                            updateButtons('ready');
-                        }
-                    }
-                }, 1000);
-            } else {
-                time = 0;
-                window.updateTimerDisplay(time, initialDuration);
-                chrome.storage.local.remove("pomodoro_timer");
-                if (type === 'work'){
-                    pomodoroCount++;
-                    chrome.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
-                    updateButtons('workDone');
-                } else if (type === 'break') {
-                    updateButtons('ready');
-                } else if (type === 'longBreak'){
-                    updateButtons('ready');
-                }
-            } 
-        } else {
-            console.log('No stored timer found, setting default');
-            pomodoroCount = result.pomodoro_count || 0;
-            time = 25 * 60;
-            initialDuration = 25*60;
-            window.updateTimerDisplay(time, initialDuration);
-            updateButtons('ready');
-        }
-    });
+    
+    if (isFirefox) {
+        api.storage.local.get(["pomodoro_timer", "pomodoro_count"]).then((result) => {
+            processTimerRestore(result);
+        });
+    } else {
+        api.storage.local.get(["pomodoro_timer", "pomodoro_count"], function(result){
+            processTimerRestore(result);
+        });
+    }
 }
 
 function stopTimer(){
@@ -205,8 +220,8 @@ function resetTimer() {
         clearInterval(timerInterval);
         timerInterval = null;
     }
-    chrome.storage.local.remove("pomodoro_timer");
-    chrome.storage.local.remove("pomodoro_count");
+    api.storage.local.remove("pomodoro_timer");
+    api.storage.local.remove("pomodoro_count");
     time = 25*60;
     initialDuration = 25*60;
     currentType = null;
@@ -219,7 +234,7 @@ function resumeTimer() {
     console.log("Resuming timer...");
     if (!timerInterval && time > 0){
         const startTimestamp = Date.now() - ((initialDuration - time) * 1000);
-        chrome.storage.local.set({
+        api.storage.local.set({
             pomodoro_timer: {
                 start: startTimestamp,
                 duration: initialDuration,
@@ -246,11 +261,11 @@ function resumeTimer() {
                 console.log("resumed timer finished");
                 clearInterval(timerInterval);
                 timerInterval = null;
-                chrome.storage.local.remove("pomodoro_timer");
+                api.storage.local.remove("pomodoro_timer");
 
                 if(currentType === 'work') {
                     pomodoroCount++;
-                    chrome.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
+                    api.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
                     updateButtons('workDone');
                 } else if (currentType === 'break'){
                     updateButtons('ready');
@@ -267,11 +282,11 @@ function skipTimer (){
         clearInterval(timerInterval);
         timerInterval=null;
     }
-    chrome.storage.local.remove('pomodoro_timer');
+    api.storage.local.remove('pomodoro_timer');
 
     if (currentType === 'work'){
         pomodoroCount++;
-        chrome.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
+        api.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
         updateButtons('workDone');
     } else if (currentType === 'break'){
         updateButtons('ready');
@@ -284,23 +299,40 @@ function skipTimer (){
 }
 
 function openBreakPage() {
-    chrome.tabs.create({
-        url: chrome.runtime.getURL('break/break.html')
-    }, function(tab) {
-        if (chrome.runtime.lastError) {
-            console.error("Error opening break page:", chrome.runtime.lastError);
-            chrome.notifications.create({
+    const breakUrl = api.runtime.getURL('break/break.html');
+    
+    if (isFirefox) {
+        api.tabs.create({
+            url: breakUrl
+        }).then((tab) => {
+            console.log("Break page opened successfully:", tab);
+        }).catch((error) => {
+            console.error("Error opening break page:", error);
+            api.notifications.create({
                 type: 'basic',
                 iconUrl: 'images/icon.png',
                 title: 'Error Opening Break Page',
                 message: 'Please open the break page manually from the extension popup.'
             });
-        } else {
-            console.log("Break page opened successfully:", tab);
-        }
-    });
+        });
+    } else {
+        api.tabs.create({
+            url: breakUrl
+        }, function(tab) {
+            if (api.runtime.lastError) {
+                console.error("Error opening break page:", api.runtime.lastError);
+                api.notifications.create({
+                    type: 'basic',
+                    iconUrl: 'images/icon.png',
+                    title: 'Error Opening Break Page',
+                    message: 'Please open the break page manually from the extension popup.'
+                });
+            } else {
+                console.log("Break page opened successfully:", tab);
+            }
+        });
+    }
 }
-
 
 
 document.addEventListener('DOMContentLoaded', function() {
