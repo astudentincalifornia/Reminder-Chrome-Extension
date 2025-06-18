@@ -8,17 +8,18 @@ function initializeBreakPage() {
     setupEventListeners();
 }
 
-function loadSavedLinks(){
+async function loadSavedLinks(){
     const linksList = document.getElementById('links-list');
 
-    if (isFirefox) {
-        api.storage.local.get(['memory_links']).then((result) => {
-            processSavedLinks(result, linksList);
-        });
-    } else {
-        api.storage.local.get(['memory_links'], function(result) {
-            processSavedLinks(result, linksList);
-        });
+    try {
+        const result = await (isFirefox ?
+            api.storage.local.get(['memory_links']) :
+            new Promise(resolve => api.storage.local.get(['memory_links'], resolve))
+        );
+        processSavedLinks(result, linksList);
+    } catch (error) {
+        console.error('Error loading saved links:', error);
+        linksList.innerHTML = '<li>Error loading saved links</li>';
     }
 }
 
@@ -79,25 +80,24 @@ function processSavedLinks(result, linksList) {
 }
 
 
-function deleteSavedLink(index) {
-    if(isFirefox) {
-        api.storage.local.get(['memory_links']).then((result) => {
-            const links = result.memory_links || [];
-            links.splice(index, 1);
-            
-            return api.storage.local.set({memory_links: links});
-        }).then(() => {
-            loadSavedLinks();
-        });
-    } else {
-        api.storage.local.get(['memory_links'], function(result) {
-            const links = result.memory_links || [];
-            links.splice(index, 1);
-
-            api.storage.local.set({memory_links: links}, function(){
-                loadSavedLinks();
-            });
-        });
+async function deleteSavedLink(index) {
+    try {
+        const result = await (isFirefox ?
+            api.storage.local.get(['memory_links']) :
+            new Promise(resolve => api.storage.local.get(['memory_links'], resolve))
+        );
+        
+        const links = result.memory_links || [];
+        links.splice(index, 1);
+        
+        await (isFirefox ?
+            api.storage.local.set({memory_links: links}) :
+            new Promise(resolve => api.storage.local.set({memory_links: links}, resolve))
+        );
+        
+        loadSavedLinks();
+    } catch (error) {
+        console.error('Error deleting saved link:', error);
     }
 }
 
@@ -123,16 +123,18 @@ function setupEventListeners() {
     // }
 }
 
-function enterZenMode(){
+async function enterZenMode(){
     const zenOverlay = document.getElementById('zen-overlay');
-    if (isFirefox) {
-        api.storage.local.get("pomodoro_timer").then((result) => {
-            zenMode(result, zenOverlay);
-        });
-    } else {
-        api.storage.local.get("pomodoro_timer", function(result) {
-            zenMode(result, zenOverlay);
-        });
+    
+    try {
+        const result = await (isFirefox ?
+            api.storage.local.get("pomodoro_timer") :
+            new Promise(resolve => api.storage.local.get("pomodoro_timer", resolve))
+        );
+        zenMode(result, zenOverlay);
+    } catch (error) {
+        console.error('Error getting timer state for zen mode:', error);
+        zenMode({}, zenOverlay);
     }
 }
 

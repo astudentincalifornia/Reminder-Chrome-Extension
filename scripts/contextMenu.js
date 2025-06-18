@@ -76,7 +76,7 @@ async function fetchPageTitle(url) {
 
         await new Promise((resolve)=> {
             const listener = (tabId, info) => {
-                if (tabId == newTab.id && info.status === 'complete') {
+                if (tabId === newTab.id && info.status === 'complete') {
                     api.tabs.onUpdated.removeListener(listener);
                     resolve();
                 }
@@ -126,33 +126,24 @@ async function saveLinkToMemory(info, tab){
         tags: []
     };
 
-    if (isFirefox) {
-        try {
-            const result = await api.storage.local.get(['memory_links']);
-            const existingLinks = result.memory_links || [];
-            existingLinks.push(linkData);
+    try{
+        const result = await (isFirefox ?
+            api.storage.local.get(['memory_links']) :
+            new Promise(resolve => api.storage.local.get(['memory_links'], resolve))
+        );
 
-            await api.storage.local.set({ memory_links: existingLinks });
-            showNotification(`Link saved: ${linkData.title}`, 'success');
-        } catch (error) {
-            showNotification('Error saving link', 'error');
-        }
-    } else {
-        api.storage.local.get(['memory_links'], (result) => {
-            const existingLinks = result.memory_links || [];
-            existingLinks.push(linkData);
+        const existingLinks = result.memory_links || [];
+        existingLinks.push(linkData);
 
-            api.storage.local.set({
-                memory_links: existingLinks
-            }, () => {
-                if (chrome.runtime.lastError){
-                    showNotification('Error saving link', 'error');
-                } else {
-                    showNotification(`Link saved: ${linkData.title}`, 'success');
-                }
-            });
-        });
-    }   
+        await (isFirefox ? 
+            api.storage.local.setTimeout({ memory_links: existingLinks }) :
+            new Promise(resolve => api.storage.local.set({ memory_links: existingLinks }, resolve))
+        );
+
+        showNotification(`Link saved: ${linkData.title}`, 'success');
+    } catch (error) {
+        showNotification('Error saving link', 'error');
+    }
 }
 
 function showNotification(message, type = 'info') {

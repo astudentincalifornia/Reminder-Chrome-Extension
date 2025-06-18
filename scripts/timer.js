@@ -65,20 +65,37 @@ function updatePomodoroDisplay(){
     }
 }
 
-function startTimer(duration, type) {
+async function startTimer(duration, type) {
     console.log('Starting timer with duration:', duration, 'type:', type);
     initialDuration = duration;
     currentType = type;
     const startTimestamp = Date.now();
-    api.storage.local.set({
-        pomodoro_timer: {
-            start: startTimestamp,
-            duration: duration,
-            type: type,
-            initialDuration: duration,
-            pomodoroCount: pomodoroCount
-        }
-    });
+    
+    try {
+        await (isFirefox ? 
+            api.storage.local.set({
+                pomodoro_timer: {
+                    start: startTimestamp,
+                    duration: duration,
+                    type: type,
+                    initialDuration: duration,
+                    pomodoroCount: pomodoroCount
+                }
+            }) :
+            new Promise(resolve => api.storage.local.set({
+                pomodoro_timer: {
+                    start: startTimestamp,
+                    duration: duration,
+                    type: type,
+                    initialDuration: duration,
+                    pomodoroCount: pomodoroCount
+                }
+            }, resolve))
+        );
+    } catch (error) {
+        console.error('Error Saving: ', error);
+    }
+
     time = duration;
     console.log('Initial time set to:', time);
     window.updateTimerDisplay(time, initialDuration);
@@ -93,7 +110,7 @@ function startTimer(duration, type) {
         openBreakPage();
     }
 
-    timerInterval = setInterval(function() {
+    timerInterval = setInterval(async function() {
         if (time > 0) {
             time--;
             console.log('Timer tick, time now:', time);
@@ -102,7 +119,15 @@ function startTimer(duration, type) {
             console.log('Timer finished');
             clearInterval(timerInterval);
             timerInterval = null;
-            api.storage.local.remove("pomodoro_timer");
+
+            try {
+                await (isFirefox ?
+                    api.storage.local.remove("pomodoro_timer") :
+                    new Promise(resolve => api.storage.local.remove("pomodoro_timer", resolve))
+                );
+            } catch (error) {
+                console.error('Error removing timer from storage:', error);
+            }
             
             api.notifications.create({
                 type: 'basic',
@@ -113,7 +138,14 @@ function startTimer(duration, type) {
 
             if (type === 'work'){
                 pomodoroCount++;
-                api.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
+                try {
+                    await (isFirefox ?
+                        api.storage.local.set({pomodoro_count: pomodoroCount}) :
+                        new Promise(resolve => api.storage.local.set({pomodoro_count: pomodoroCount}, resolve))
+                    );
+                } catch (error) {
+                    console.error('Error saving pomodoro count:', error);
+                }
                 updateButtons('workDone');
             } else if (type === 'break'){
                 updateButtons('ready');
@@ -125,7 +157,7 @@ function startTimer(duration, type) {
     }, 1000);
 }
 
-function processTimerRestore(result) {
+async function processTimerRestore(result) {
     if (result.pomodoro_timer) {
         console.log('Found stored timer:', result.pomodoro_timer);
         const {start, duration, type, initialDuration: storedInitial, pomodoroCount: storedCount} = result.pomodoro_timer;
@@ -135,6 +167,7 @@ function processTimerRestore(result) {
         const elapsed = Math.floor((Date.now()-start)/1000);
         const remaining = duration - elapsed;
         console.log('Elapsed:', elapsed, 'Remaining:', remaining);
+
         if (remaining > 0) {
             time = remaining;
             window.updateTimerDisplay(time, initialDuration);
@@ -145,7 +178,7 @@ function processTimerRestore(result) {
             } else if (type === 'longBreak'){
                 updateButtons('longBreaking');
             }
-            timerInterval = setInterval(function () {
+            timerInterval = setInterval(async function () {
                 if (time > 0) {
                     time--;
                     console.log('Restored timer tick, time now:', time);
@@ -154,11 +187,25 @@ function processTimerRestore(result) {
                     console.log('Restored timer finished');
                     clearInterval(timerInterval);
                     timerInterval = null;
-                    api.storage.local.remove("pomodoro_timer");
+                    try {
+                        await (isFirefox ?
+                            api.storage.local.remove("pomodoro_timer") :
+                            new Promise(resolve => api.storage.local.remove("pomodoro_timer", resolve))
+                        );
+                    } catch (error) {
+                        console.error('Error removing timer from storage:', error);
+                    }
 
                     if(type === 'work'){
                         pomodoroCount++;
-                        api.storage.local.set({pomodoro_count: pomodoroCount});
+                        try {
+                            await (isFirefox ?
+                                api.storage.local.set({pomodoro_count: pomodoroCount}) :
+                                new Promise(resolve => api.storage.local.set({pomodoro_count: pomodoroCount}, resolve))
+                            );
+                        } catch (error) {
+                            console.error('Error saving pomodoro count:', error);
+                        }
                         updateButtons('workDone');
                     } else if (type === 'break'){
                         updateButtons('ready');
@@ -170,10 +217,24 @@ function processTimerRestore(result) {
         } else {
             time = 0;
             window.updateTimerDisplay(time, initialDuration);
-            api.storage.local.remove("pomodoro_timer");
+            try {
+                await (isFirefox ?
+                    api.storage.local.remove("pomodoro_timer") :
+                    new Promise(resolve => api.storage.local.remove("pomodoro_timer", resolve))
+                );
+            } catch (error) {
+                console.error('Error removing timer from storage:', error);
+            }
             if (type === 'work'){
                 pomodoroCount++;
-                api.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
+                try {
+                    await (isFirefox ?
+                        api.storage.local.set({pomodoro_count: pomodoroCount}) :
+                        new Promise(resolve => api.storage.local.set({pomodoro_count: pomodoroCount}, resolve))
+                    );
+                } catch (error) {
+                    console.error('Error saving pomodoro count:', error);
+                }                
                 updateButtons('workDone');
             } else if (type === 'break') {
                 updateButtons('ready');
@@ -192,17 +253,17 @@ function processTimerRestore(result) {
 }
 
 
-function restoreTimer() {
+async function restoreTimer() {
     console.log('Restoring timer...');
     
-    if (isFirefox) {
-        api.storage.local.get(["pomodoro_timer", "pomodoro_count"]).then((result) => {
-            processTimerRestore(result);
-        });
-    } else {
-        api.storage.local.get(["pomodoro_timer", "pomodoro_count"], function(result){
-            processTimerRestore(result);
-        });
+    try {
+        const result = await (isFirefox ?
+            api.storage.local.get(["pomodoro_timer", "pomodoro_count"]) :
+            new Promise(resolve => api.storage.local.get(["pomodoro_timer", "pomodoro_count"], resolve))
+        );
+        await processTimerRestore(result);
+    } catch (error) {
+        console.error('Error restoring timer:', error);
     }
 }
 
@@ -215,13 +276,19 @@ function stopTimer(){
     }
 }
 
-function resetTimer() {
+async function resetTimer() {
     if (timerInterval){
         clearInterval(timerInterval);
         timerInterval = null;
     }
-    api.storage.local.remove("pomodoro_timer");
-    api.storage.local.remove("pomodoro_count");
+    try {
+        await (isFirefox ?
+            api.storage.local.remove(["pomodoro_timer", "pomodoro_count"]) :
+            new Promise(resolve => api.storage.local.remove(["pomodoro_timer", "pomodoro_count"], resolve))
+        );
+    } catch (error) {
+        console.error('Error clearing storage:', error);
+    }
     time = 25*60;
     initialDuration = 25*60;
     currentType = null;
@@ -230,19 +297,34 @@ function resetTimer() {
     updateButtons('ready');
 }
 
-function resumeTimer() {
+async function resumeTimer() {
     console.log("Resuming timer...");
     if (!timerInterval && time > 0){
         const startTimestamp = Date.now() - ((initialDuration - time) * 1000);
-        api.storage.local.set({
-            pomodoro_timer: {
-                start: startTimestamp,
-                duration: initialDuration,
-                type: currentType || "work",
-                initialDuration: initialDuration,
-                pomodoroCount: pomodoroCount
-            }
-        });
+        try {
+            await (isFirefox ?
+                api.storage.local.set({
+                    pomodoro_timer: {
+                        start: startTimestamp,
+                        duration: initialDuration,
+                        type: currentType || "work",
+                        initialDuration: initialDuration,
+                        pomodoroCount: pomodoroCount
+                    }
+                }) :
+                new Promise(resolve => api.storage.local.set({
+                    pomodoro_timer: {
+                        start: startTimestamp,
+                        duration: initialDuration,
+                        type: currentType || "work",
+                        initialDuration: initialDuration,
+                        pomodoroCount: pomodoroCount
+                    }
+                }, resolve))
+            );
+        } catch (error) {
+            console.error('Error saving resumed timer state:', error);
+        }
 
         if (currentType === 'work') {
             updateButtons('working');
@@ -252,7 +334,7 @@ function resumeTimer() {
             updateButtons('longBreaking');
         }
 
-        timerInterval = setInterval(function() {
+        timerInterval = setInterval(async function() {
             if (time>0) {
                 time--;
                 console.log('Resumed');
@@ -261,11 +343,25 @@ function resumeTimer() {
                 console.log("resumed timer finished");
                 clearInterval(timerInterval);
                 timerInterval = null;
-                api.storage.local.remove("pomodoro_timer");
+                try {
+                    await (isFirefox ?
+                        api.storage.local.remove("pomodoro_timer") :
+                        new Promise(resolve => api.storage.local.remove("pomodoro_timer", resolve))
+                    );
+                } catch (error) {
+                    console.error('Error removing timer from storage:', error);
+                }
 
                 if(currentType === 'work') {
                     pomodoroCount++;
-                    api.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
+                    try {
+                        await (isFirefox ?
+                            api.storage.local.set({pomodoro_count: pomodoroCount}) :
+                            new Promise(resolve => api.storage.local.set({pomodoro_count: pomodoroCount}, resolve))
+                        );
+                    } catch (error) {
+                        console.error('Error saving pomodoro count:', error);
+                    }
                     updateButtons('workDone');
                 } else if (currentType === 'break'){
                     updateButtons('ready');
@@ -277,16 +373,29 @@ function resumeTimer() {
     }
 }
 
-function skipTimer (){
+async function skipTimer (){
     if(timerInterval) {
         clearInterval(timerInterval);
         timerInterval=null;
     }
-    api.storage.local.remove('pomodoro_timer');
-
+    try {
+        await (isFirefox ?
+            api.storage.local.remove('pomodoro_timer') :
+            new Promise(resolve => api.storage.local.remove('pomodoro_timer', resolve))
+        );
+    } catch (error) {
+        console.error('Error removing timer from storage:', error);
+    }
     if (currentType === 'work'){
         pomodoroCount++;
-        api.storage.local.set({pomodoro_count: pomodoroCount}); // Add this line
+        try {
+            await (isFirefox ?
+                api.storage.local.set({pomodoro_count: pomodoroCount}) :
+                new Promise(resolve => api.storage.local.set({pomodoro_count: pomodoroCount}, resolve))
+            );
+        } catch (error) {
+            console.error('Error saving pomodoro count:', error);
+        }
         updateButtons('workDone');
     } else if (currentType === 'break'){
         updateButtons('ready');
