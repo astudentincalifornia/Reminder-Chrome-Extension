@@ -1,0 +1,24 @@
+{
+  "name": "Reminder",
+  "description": "Reminds you before you close chrome",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": "images/icon.png"
+  },
+  "permissions":[
+    "storage",
+    "notifications",
+    "alarms",
+    "contextMenus",
+    "activeTab",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "scripts/contextMenu.js"
+  }
+}

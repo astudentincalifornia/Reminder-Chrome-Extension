@@ -1,0 +1,160 @@
+body {
+    width: 300px;
+    height: 400px;
+    margin: 0;
+    padding: 20px;
+    font-family: 'Times New Roman', Times, serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+}
+
+h1 {
+    margin: 0 0 20px 0;
+    font-size: 24px;
+    font-family: sans-serif;
+    color: black;
+}
+
+#pomodoro-count {
+    color: #ffeb3b;
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+
+#timer {
+    width: 200px;
+    height: 250px;
+    margin: 20px auto;
+    position: relative;
+    border: 3px solid #fff;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.water {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+    transition: height 1s ease-in-out;
+    border-radius: 0 0 7px 7px;
+}
+
+.water::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    animation: wave 2s ease-in-out infinite;
+}
+
+@keyframes wave {
+    0%, 100% { transform: translateY(0);}
+    50% {transform: translateY(-5px);}
+}
+
+.timer-info {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.buttons {
+    margin-top: 20px;
+}
+
+button{
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    color: white;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+button:hover{
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+button:active{
+    transform: translateY(0);
+}
+
+#startWork {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    border-color: #4CAF50;
+    color: white;
+}
+
+#startWork:hover {
+    background: linear-gradient(135deg, #45a049, #3d8b3d);
+}
+
+#startBreak {
+    background: linear-gradient(135deg, #FF9800, #f57c00);
+    border-color: #FF9800;
+    color: white;
+}
+
+#startLongBreak {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    border-color: #9C27B0;
+    color: white;
+}
+
+#startLongBreak:hover {
+    background: linear-gradient(135deg, #7B1FA2, #6A1B9A);
+}
+
+#startBreak:hover {
+    background: linear-gradient(135deg, #f57c00, #e65100);
+}
+
+#stop {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    border-color: #f44336;
+    color: white;
+}
+
+#stop:hover {
+    background: linear-gradient(135deg, #d32f2f, #c62828);
+}
+
+#reset {
+    background: linear-gradient(135deg, #607D8B, #455A64);
+    border-color: #607D8B;
+    color: white;
+}
+
+#reset:hover {
+    background: linear-gradient(135deg, #455A64, #37474F);
+}
+
+#skip {
+    background: linear-gradient(135deg, #795548, #5D4037);
+    border-color: #795548;
+    color: white;
+}
+
+#skip:hover {
+    background: linear-gradient(135deg, #5D4037, #4E342E);
+}
