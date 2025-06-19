@@ -1,6 +1,6 @@
 {
   "name": "Reminder",
-  "description": "Reminds you before you close your browser",
+  "description": "Reminds you before you close chrome",
   "version": "1.0",
   "manifest_version": 3,
   "action": {
@@ -13,31 +13,12 @@
     "alarms",
     "contextMenus",
     "activeTab",
-    "tabs",
-    "scripting"
+    "tabs"
   ],
   "host_permissions": [
     "<all_urls>"
   ],
   "background": {
     "service_worker": "scripts/contextMenu.js"
-  },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["scripts/browser-polyfill.js", "scripts/content.js"]
-    }
-  ],
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "pomodoro-timer@extension.local",
-      "strict_min_version": "109.0"
-    }
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["break/break.html"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  }
 }

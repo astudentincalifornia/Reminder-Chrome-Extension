@@ -92,6 +92,7 @@ async function startTimer(duration, type) {
                 }
             }, resolve))
         );
+        console.log("saved");
     } catch (error) {
         console.error('Error Saving: ', error);
     }

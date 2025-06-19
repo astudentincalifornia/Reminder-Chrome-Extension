@@ -136,7 +136,7 @@ async function saveLinkToMemory(info, tab){
         existingLinks.push(linkData);
 
         await (isFirefox ? 
-            api.storage.local.setTimeout({ memory_links: existingLinks }) :
+            api.storage.local.set({ memory_links: existingLinks }) :
             new Promise(resolve => api.storage.local.set({ memory_links: existingLinks }, resolve))
         );
 
