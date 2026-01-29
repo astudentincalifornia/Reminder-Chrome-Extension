@@ -36,7 +36,7 @@ Feel free to connect with me on social media:
 
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU GENERAL PUBLIC LICENSE. See the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 Contributions are welcome! If you'd like to improve this extension, feel free to submit a pull request or open an issue.
