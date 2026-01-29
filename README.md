@@ -42,4 +42,6 @@ This project is licensed under the GNU GENERAL PUBLIC LICENSE. See the [LICENSE]
 Contributions are welcome! If you'd like to improve this extension, feel free to submit a pull request or open an issue.
 
 ## Contact
-For any questions or feedback, reach out via email: [your.email@example.com](mailto:your.email@example.com)
+For any questions or feedback, reach out via email: [zheng.yilin.2010@gmail.com](mailto:zheng.yilin.2010@gmail.com)
+
+AI Usage Disclosure: AI assistance was used for significant portions of the implementation and debugging. This project is still under development and may contain unresolved issues.
