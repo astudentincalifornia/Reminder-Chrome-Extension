@@ -30,6 +30,11 @@ The **Reminder Chrome Extension** is a productivity tool designed to help users 
 ### Break Page
 ![Break Page](images/screenshot-break.png)
 
+![Zen Timer](images/screenshot-break2.png)
+
+### Add to Break Feature
+![addtobreak](images/addtobreakfeature.png)
+
 ## Socials
 Feel free to connect with me on social media:
 - **GitHub**: [A sTUDENT iN cALIFORNIA](https://github.com/astudentincalifornia)
